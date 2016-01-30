@@ -75,7 +75,7 @@ module tracklib_example($fn=25, double=false) {
     translate([-5,-10,0]) rotate([0,0,90]) wood_track_arc(10, 25, double=double, $fn=120);
     translate([-14,-3,0]) rotate([0,0,90+25]) wood_track_slope(25, 30, double=double, $fn=120);
     
-    #translate([-29,-10,6]) rotate([30,0,90+25]) wood_track_slope(25, -30, double=double, $fn=120);
+    translate([-29,-10,6]) rotate([30,0,90+25]) wood_track_slope(25, -30, double=double, $fn=120);
     // Trackmaster pieces
     translate([40,30,0]) trackmaster_plug();
     translate([40,10,0]) difference() {
@@ -153,7 +153,7 @@ module wood_rails_2d(double=false) {
             translate(v=[i,wood_well_height()]) {
                 square([well_width,wood_height()-wood_well_height()+$o]);
                 if (double) {
-                    translate([0,-wood_well_height(),0]) square([well_width,wood_height()-wood_well_height()+$o]);
+                    translate([0,-wood_well_height() - $o,0]) square([well_width,wood_height()-wood_well_height() + $o]);
                 }
             }
         }
