@@ -358,7 +358,7 @@ module wood_rails_slope(radius=25, angle=30, bevel_ends=true, double=false) {
                                 rotate(a=[0,0,45]) {
                                     cube(size = [bevel,bevel,wood_height()-wood_well_height()+$o], center=true);
                                     if (double) {
-                                translate([0,0,-wood_well_height()]) cube(size = [bevel,bevel,wood_height()-wood_well_height()+$o], center=true);
+                                        translate([0,0, - wood_well_height() * angle_sign]) cube(size = [bevel,bevel,wood_height()-wood_well_height()+$o], center=true);
                                     }
                                 }
                             }
