@@ -63,18 +63,19 @@ use <pie.scad>;
  * example of the functions it provides.  This example will *not* render if this module
  * is imported into your own project via the `use` statement.
  */
-tracklib_example();
-module tracklib_example($fn=25) {
+tracklib_example(double=true);
+module tracklib_example($fn=25, double=false) {
     // Wood pieces
-    wood_track(10);
+    wood_track(10, double=double);
     translate([15,30,0]) wood_plug();
     translate([15,10,0]) difference() {
        translate([0,-wood_plug_radius()-2]) cube([wood_plug_neck_length() + wood_plug_radius() + 2, wood_plug_radius() * 2 + 4, wood_height()]);
         wood_cutout();
     }
-    translate([-5,-10,0]) rotate([0,0,90]) wood_track_arc(10, 25, $fn=120);
-    translate([-14,-3,0]) rotate([0,0,90+25]) wood_track_slope(25, 30, $fn=120);
-    #translate([-29,-10,6]) rotate([30,0,90+25]) wood_track_slope(25, -30, $fn=120);
+    translate([-5,-10,0]) rotate([0,0,90]) wood_track_arc(10, 25, double=double, $fn=120);
+    translate([-14,-3,0]) rotate([0,0,90+25]) wood_track_slope(25, 30, double=double, $fn=120);
+    
+    #translate([-29,-10,6]) rotate([30,0,90+25]) wood_track_slope(25, -30, double=double, $fn=120);
     // Trackmaster pieces
     translate([40,30,0]) trackmaster_plug();
     translate([40,10,0]) difference() {
@@ -141,7 +142,7 @@ module wood_track_2d() {
  * 2d shape for the rails (or wheel wells) in basic wooden track.  To be used with
  * wood_track_2d(), linear_extrude(), and rotate_extrude().
  */
-module wood_rails_2d() {
+module wood_rails_2d(double=false) {
     well_width   = wood_well_width();
     well_spacing = wood_well_spacing();
     well_padding = (wood_width() - well_spacing - (2*well_width))/2;
@@ -151,6 +152,9 @@ module wood_rails_2d() {
         for (i = [well_padding, wood_width() - well_padding - well_width]) {
             translate(v=[i,wood_well_height()]) {
                 square([well_width,wood_height()-wood_well_height()+$o]);
+                if (double) {
+                    translate([0,-wood_well_height(),0]) square([well_width,wood_height()-wood_well_height()+$o]);
+                }
             }
         }
         // Bevels on wheel wells
@@ -159,6 +163,9 @@ module wood_rails_2d() {
             translate(v=[i,wood_height() + bevel_pad]) {
                 rotate(a=[0,0,45]) {
                     square([bevel,bevel], center=true);
+                    if (double) {
+                        translate([-wood_well_height()+bevel/2,-wood_well_height()+bevel/2,0]) square([bevel,bevel], center=true);
+                    }
                 }
             }
         }
@@ -170,11 +177,11 @@ module wood_rails_2d() {
  * @param int length Length of track to render.  Standard short wooden length is 53.5mm.
  * @param bool rails False if you do not want to include rails (wheel wells).
  */
-module wood_track(length=53.5, rails=true) {
+module wood_track(length=53.5, rails=true, double=false) {
     difference() {
         rotate([90,0,90]) linear_extrude(length, convexity = 10) wood_track_2d();
         if (rails) {
-            wood_rails(length);
+            wood_rails(length, double=double);
         }
     }
 }
@@ -186,22 +193,27 @@ module wood_track(length=53.5, rails=true) {
  * @param int length      Length of track to render.  Standard short wooden length is 53.5mm.
  * @param bool bevel_ends Bevel the outer edges of the rails.  Set to false if you intend to connect multiple rails together on the same piece of track.
  */
-module wood_rails(length=53.5, bevel_ends=true) {
+module wood_rails(length=53.5, bevel_ends=true, double=false) {
     well_width   = wood_well_width();
     well_spacing = wood_well_spacing();
     well_padding = (wood_width() - well_spacing - (2*well_width))/2;
     bevel_pad    = bevel_width*sqrt(.5)*($o/2);
     union() {
-        rotate([90,0,90]) translate([0,0,-$o]) linear_extrude(length+2*$o, convexity = 20) wood_rails_2d();
+        rotate([90,0,90]) translate([0,0,-$o]) linear_extrude(length+2*$o, convexity = 20) wood_rails_2d(double=double);
         if (bevel_ends) {
             for (i = [ well_padding+bevel_pad, well_padding+well_width-bevel_pad, wood_width() - well_padding - well_width+bevel_pad, wood_width() - well_padding-bevel_pad ]) {
                 for (j=[-bevel_pad,length+bevel_pad]) {
                     translate(v=[j,i,wood_height()-((wood_height()-wood_well_height()-$o)/2)]) {
                         rotate(a=[0,0,45]) {
                             cube(size = [bevel,bevel,wood_height()-wood_well_height()+$o], center=true);
+                        if (double) {
+                            translate([0,0,-wood_well_height()]) cube(size = [bevel,bevel,wood_height()-wood_well_height()+$o], center=true);
+                        }
+
                         }
                     }
                 }
+                
             }
         }
     }
@@ -214,7 +226,7 @@ module wood_rails(length=53.5, bevel_ends=true) {
  * @param int angle  Angle of track to render.  Standard track angle is 45 degrees.
  * @param bool rails False if you do not want to include rails (wheel wells).
  */
-module wood_track_arc(radius = 245/2, angle=45, rails=true) {
+module wood_track_arc(radius = 245/2, angle=45, rails=true, double=false) {
     difference() {
         intersection() {
             pie(radius + wood_width(), angle, wood_height());
@@ -223,7 +235,7 @@ module wood_track_arc(radius = 245/2, angle=45, rails=true) {
                 wood_track_2d();
         }
         if (rails) {
-            wood_rails_arc(radius,angle);
+            wood_rails_arc(radius,angle,double=double);
         }
     }
 }
@@ -236,7 +248,7 @@ module wood_track_arc(radius = 245/2, angle=45, rails=true) {
  * @param int angle       Angle of track to render.  Standard track angle is 45 degrees.
  * @param bool bevel_ends Bevel the outer edges of the rails.  Set to false if you intend to connect multiple rails together on the same piece of track.
  */
-module wood_rails_arc(radius = 245/2, angle=45, bevel_ends=true) {
+module wood_rails_arc(radius = 245/2, angle=45, bevel_ends=true, double=false) {
     well_width   = wood_well_width();
     well_spacing = wood_well_spacing();
     well_padding = (wood_width() - well_spacing - (2*well_width))/2;
@@ -246,7 +258,7 @@ module wood_rails_arc(radius = 245/2, angle=45, bevel_ends=true) {
             rotate([0,0,-$o]) pie(radius + wood_width(), angle+2*$o, wood_height()+$o);
             rotate_extrude(convexity = 10)
                 translate([radius,0,0])
-                wood_rails_2d();
+                wood_rails_2d(double=double);
         }
         if (bevel_ends) {
             for (a=[0,angle]) {
@@ -257,6 +269,10 @@ module wood_rails_arc(radius = 245/2, angle=45, bevel_ends=true) {
                         translate(v=[-bevel_pad,i,wood_height()-((wood_height()-wood_well_height()-$o)/2)]) {
                             rotate(a=[0,0,45]) {
                                 cube(size = [bevel,bevel,wood_height()-wood_well_height()+$o], center=true);
+               if (double) {
+                            translate([0,0,-wood_well_height()]) cube(size = [bevel,bevel,wood_height()-wood_well_height()+$o], center=true);
+                        }
+
                             }
                         }
                     }
@@ -272,7 +288,7 @@ module wood_rails_arc(radius = 245/2, angle=45, bevel_ends=true) {
  * @param int angle  Positive or negative angle of slope to render.  Standard angles seem to range 20-30 degrees.
  * @param bool rails False if you do not want to include rails (wheel wells).
  */
-module wood_track_slope(radius=25, angle=30, rails=true) {
+module wood_track_slope(radius=25, angle=30, rails=true, double=false) {
     abs_angle = abs(angle); // convert the negative angle to positive
 
     // Really wish we could use "if" for this kind of stuff....
@@ -291,7 +307,7 @@ module wood_track_slope(radius=25, angle=30, rails=true) {
                     wood_track_2d();
             }
         if (rails) {
-            wood_rails_slope(radius, angle);
+            wood_rails_slope(radius, angle, double=double);
         }
     }
 }
@@ -304,7 +320,7 @@ module wood_track_slope(radius=25, angle=30, rails=true) {
  * @param int angle       Positive or negative angle of slope to render.  Standard angles seem to range 20-30 degrees.
  * @param bool bevel_ends Bevel the outer edges of the rails.  Set to false if you intend to connect multiple rails together on the same piece of track.
  */
-module wood_rails_slope(radius=25, angle=30, bevel_ends=true) {
+module wood_rails_slope(radius=25, angle=30, bevel_ends=true, double=false) {
     abs_angle    = abs(angle) + 2 * $o; // convert the negative angle to positive, plus some overhang
     well_width   = wood_well_width();
     well_spacing = wood_well_spacing();
@@ -328,7 +344,7 @@ module wood_rails_slope(radius=25, angle=30, bevel_ends=true) {
                     translate([rails_radius, -trans_x,0])
                         rotate([0,0,90*angle_sign])
                         difference() {
-                            wood_rails_2d();
+                            wood_rails_2d(double=double);
                         }
             }
             if (bevel_ends) {
@@ -341,6 +357,9 @@ module wood_rails_slope(radius=25, angle=30, bevel_ends=true) {
                             translate(v=[-bevel_pad,i,wood_height()-((wood_height()-wood_well_height()-$o)/2)]) {
                                 rotate(a=[0,0,45]) {
                                     cube(size = [bevel,bevel,wood_height()-wood_well_height()+$o], center=true);
+                                    if (double) {
+                                translate([0,0,-wood_well_height()]) cube(size = [bevel,bevel,wood_height()-wood_well_height()+$o], center=true);
+                                    }
                                 }
                             }
                         }
