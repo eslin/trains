@@ -23,7 +23,7 @@ if __name__ == '__main__':
                 name = 'track-standard-stl/track-standard-{0}-straight-{1}-{2}'.format(base, size, straight)
                 if name in seen:
                     continue
-                print name
+                print(name)
                 s.render_stl(name)
                 seen[name] = True
 
@@ -53,6 +53,6 @@ if __name__ == '__main__':
                             name += '-straight-{0}'.format(straight)
                         if name in seen:
                             continue
-                        print name
+                        print(name)
                         s.render_stl(dest=name, overwrite=False)
                         seen[name] = True
